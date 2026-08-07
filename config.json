@@ -108,14 +108,14 @@
       "name": "Apple Wallet Token Secret",
       "type": "text",
       "required": true,
-      "description": "Shared secret used to sign Apple Wallet JWT tokens. Must match APPLE_TOKEN_SECRET in the Azure Function."
+      "description": "Shared secret used to sign Apple Wallet JWT tokens. Must match the secret configured by the Apple Wallet pass generation service."
     },
     {
       "key": "apple_wallet_endpoint",
       "name": "Apple Wallet Endpoint URL",
       "type": "text",
       "required": true,
-      "description": "Base URL for the Apple Wallet Azure Function."
+      "description": "Base URL for the Apple Wallet pass generation service."
     },
     {
       "key": "logo_url",
