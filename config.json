@@ -1,0 +1,155 @@
+{
+  "name": "DigitalTrialsID",
+  "namespace": "UniversityofMiami\\DigitalTrialsID",
+  "description": "Generate digital research participant ID cards for Apple Wallet and Google Wallet.",
+  "version": "0.0.1",
+  "authors": [
+    {
+      "name": "Carlos A. Canales",
+      "email": "ccanales2@miami.edu",
+      "institution": "University of Miami"
+    }
+  ],
+  "permissions": [
+    "redcap_save_record"
+  ],
+  "enable-every-page-hooks-on-system-pages": false,
+  "links": {
+    "project": [],
+    "control-center": []
+  },
+  "no-auth-pages": [],
+  "project-settings": [
+    {
+      "key": "field_study_title",
+      "name": "Study Title:",
+      "type": "field-name",
+      "field-type": "text",
+      "required": true
+    },
+    {
+      "key": "field_pi_name",
+      "name": "Principal Investigator Name:",
+      "type": "field-name",
+      "field-type": "text",
+      "required": true
+    },
+    {
+      "key": "field_contact_email",
+      "name": "Study Contact Email:",
+      "type": "field-name",
+      "field-type": "email",
+      "required": true
+    },
+    {
+      "key": "field_study_description",
+      "name": "Study Description",
+      "type": "textarea",
+      "required": true,
+      "description": "Enter a lay-friendly description of the study purpose/objective."
+    },
+    {
+      "key": "study_contact_phone",
+      "name": "Contact Phone Number:",
+      "type": "text",
+      "required": false,
+      "description": "This contact number is provided for situations in which a participant's healthcare provider needs to contact the study team."
+    },
+    {
+      "key": "trigger_instrument",
+      "name": "Instrument that issues Digital Study IDs",
+      "required": true,
+      "type": "form-list",
+      "repeatable": false
+    }
+  ],
+  "system-settings": [
+    {
+      "key": "environment",
+      "name": "Environment",
+      "type": "dropdown",
+      "required": true,
+      "choices": [
+        {
+          "value": "prod",
+          "name": "Production"
+        },
+        {
+          "value": "test",
+          "name": "Test"
+        }
+      ],
+      "description": "Identifies the environment used when generating wallet object IDs."
+    },
+    {
+      "key": "google_service_account_json",
+      "name": "Google Service Account Key (JSON)",
+      "type": "textarea",
+      "required": false,
+      "external": true,
+      "description": "Paste the full contents of your Google Wallet service account JSON here."
+    },
+    {
+      "key": "google_issuer_id",
+      "name": "Google Issuer ID",
+      "type": "text",
+      "required": false,
+      "description": "Your Google Wallet Issuer ID (for example, 3388000000022955593)."
+    },
+    {
+      "key": "google_class_id",
+      "name": "Google Wallet Class ID Suffix",
+      "type": "text",
+      "required": false,
+      "description": "Enter only the class suffix, for example digitaltrials_class. The issuer ID is added automatically."
+    },
+    {
+      "key": "apple_token_secret",
+      "name": "Apple Wallet Token Secret",
+      "type": "text",
+      "required": true,
+      "description": "Shared secret used to sign Apple Wallet JWT tokens. Must match APPLE_TOKEN_SECRET in the Azure Function."
+    },
+    {
+      "key": "apple_wallet_endpoint",
+      "name": "Apple Wallet Endpoint URL",
+      "type": "text",
+      "required": true,
+      "description": "Base URL for the Apple Wallet Azure Function."
+    },
+    {
+      "key": "logo_url",
+      "name": "Logo URL",
+      "type": "text",
+      "required": false,
+      "repeatable": false,
+      "placeholder": "https://example.com/logo.png",
+      "description": "Optional direct HTTPS URL to a logo image accessible by Google Wallet."
+    },
+    {
+      "key": "hero_url",
+      "name": "Hero Image URL",
+      "type": "text",
+      "required": false,
+      "repeatable": false,
+      "placeholder": "https://example.com/hero.png",
+      "description": "Optional direct HTTPS URL to a hero image accessible by Google Wallet."
+    },
+    {
+      "key": "background_color",
+      "name": "Card Background Color",
+      "type": "text",
+      "required": false,
+      "repeatable": false,
+      "placeholder": "#ffb994",
+      "description": "Enter a HEX color code for the background (for example, #004080)."
+    }
+  ],
+  "crons": [],
+  "compatibility": {
+    "php-version-min": "8.0",
+    "php-version-max": "",
+    "redcap-version-min": "12.0.0",
+    "redcap-version-max": ""
+  }
+}

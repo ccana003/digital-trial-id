@@ -1,0 +1,21 @@
+{
+  "name": "digital/trial-id",
+  "description": "Digital Trial ID dependencies",
+  "config": {
+    "platform": {
+      "php": "8.4.14"
+    }
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Carlos Canales",
+      "email": "ccanales2@miami.edu"
+    }
+  ],
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "require": {
+    "firebase/php-jwt": "^7.1"
+  }
+}

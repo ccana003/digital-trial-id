@@ -1,0 +1,22 @@
+
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local credentials and secrets
+*.key
+*.pem
+.env
+.env.*
