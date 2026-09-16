@@ -1,0 +1,50 @@
+name: Update Composer Lock
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-lock:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Show Composer configuration
+        run: |
+          php -v
+          composer --version
+          composer validate --no-check-lock || true
+
+      - name: Regenerate composer.lock
+        run: composer update --lock --no-install --no-audit --no-interaction
+
+      - name: Validate Composer files
+        run: composer validate
+
+      - name: Show resulting platform override
+        run: grep -A 3 '"platform-overrides"' composer.lock || true
+
+      - name: Commit updated lock file
+        run: |
+          if git diff --quiet composer.lock; then
+            echo "composer.lock did not require changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add composer.lock
+          git commit -m "Update Composer lock file"
+          git push
