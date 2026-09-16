@@ -130,17 +130,27 @@ function generate_wallet_link(
 
         $objectId = $issuerId . '.' . $identifier;
 
-        $textModules = [
-            [
-                'id' => 'start_date',
-                'header' => 'Helpful Information',
-                'body' =>
-                    "Start Date: $start_date\n"
-                    . "End Date: $end_date\n"
-                    . "PI: $pi\n"
-                    . "Contact: $contact\n"
-                    . "Phone: $study_contact_phone"
-            ],
+        $helpfulInformation = [
+			"Start Date: $start_date"
+		];
+
+		if (trim((string)$end_date) !== '') {
+			$helpfulInformation[] = "End Date: $end_date";
+		}
+
+		$helpfulInformation[] = "PI: $pi";
+		$helpfulInformation[] = "Contact: $contact";
+
+		if (trim((string)$study_contact_phone) !== '') {
+			$helpfulInformation[] = "Phone: $study_contact_phone";
+		}
+
+		$textModules = [
+			[
+				'id' => 'helpful_information',
+				'header' => 'Helpful Information',
+				'body' => implode("\n", $helpfulInformation)
+			],
             [
                 'id' => 'participant',
                 'header' => 'Participant',
