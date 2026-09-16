@@ -4,262 +4,231 @@
 
 DigitalTrialsID is a REDCap External Module that allows research studies to issue digital participant ID cards that participants can save to **Apple Wallet** or **Google Wallet**.
 
-Once DigitalTrialsID has been installed and enabled for your REDCap project, most studies only need to complete a few steps to begin issuing cards.
+The module generates wallet links when a configured REDCap instrument is saved. Study teams select the participant fields and wallet-link destination fields through the project-level module settings, so specific REDCap variable names are not hardcoded.
 
 ---
 
-## Getting Started
+## For REDCap Project Teams
 
-### 1. Add the Required Fields
+After a REDCap administrator installs and configures the module, a study team completes the project-level setup described below.
 
-Your REDCap project needs the following fields:
+## 1. Prepare the REDCap Fields
 
-- `participant_name` — participant name displayed on the digital ID
-- `start_date` — participant's study start date
-- `end_date` — participant's study end date
-- `google_wallet_link` — stores the generated Google Wallet link
-- `apple_wallet_link` — stores the generated Apple Wallet link
+The project needs fields for the following information:
 
-DigitalTrialsID automatically writes the generated Wallet links to the last two fields.
+| Purpose | Recommended field type | Required |
+|---|---|---:|
+| Participant name | Text | Yes |
+| Study start date | Text with date validation | Yes |
+| Study end date | Text with date validation | No |
+| Google Wallet link | Plain text | Yes |
+| Apple Wallet link | Plain text | Yes |
 
-The Wallet link fields should not be manually edited by participants.
+The field variable names are chosen by the study team. Examples include:
 
-If these fields are located on a participant-facing survey, consider hiding them with an appropriate REDCap action tag such as:
+```text
+participant_name
+study_start_date
+study_end_date
+google_wallet_link
+apple_wallet_link
+```
+
+These names are only examples. DigitalTrialsID uses the fields selected in the project-level module settings.
+
+The end-date field is optional. Studies that do not know a participant’s end date at enrollment may leave the field unmapped or leave its value blank.
+
+### Wallet-Link Fields
+
+The Google and Apple Wallet destination fields should:
+
+- be separate REDCap text fields;
+- not be manually edited by participants; and
+- not use URL validation, because signed Wallet URLs can be long.
+
+If the fields are located on a participant-facing survey, consider adding:
 
 ```text
 @HIDDEN-SURVEY
 ```
 
----
-
-### 2. Configure DigitalTrialsID
-
-Open the External Module settings for your REDCap project and configure the study information.
-
-#### Study Title
-
-Select the REDCap field containing the study title.
-
-#### Principal Investigator Name
-
-Select the REDCap field containing the principal investigator's name.
-
-#### Study Contact Email
-
-Select the REDCap field containing the study contact email address.
-
-#### Study Description
-
-Enter a short, participant-friendly description of the study purpose or objective.
-
-#### Contact Phone Number
-
-Optionally provide a study contact phone number.
-
-This may be useful when a participant or healthcare provider needs to contact the study team.
-
-#### Instrument That Issues Digital Study IDs
-
-Select the REDCap instrument that should trigger creation of the participant's digital ID.
+This prevents the generated URLs from appearing as editable survey fields.
 
 ---
 
-### 3. Choose When the Card Is Created
+## 2. Configure the Project Settings
 
-DigitalTrialsID generates the Wallet links when the selected trigger instrument is saved.
+Open the External Module settings for the REDCap project.
 
-```text
-Participant information is entered
-              |
-              v
-Configured instrument is saved
-              |
-              v
-      DigitalTrialsID runs
-              |
-        +-----+-----+
-        |           |
-        v           v
-   Apple Wallet  Google Wallet
-       link          link
-        |           |
-        +-----+-----+
-              |
-              v
-     Saved to REDCap record
-```
+### Study Information
 
-The participant must have a name, study start date, and study end date before the digital ID can be generated.
+Enter the information that should appear on the digital participant ID:
+
+- **Study Title**
+- **Principal Investigator Name**
+- **Study Contact Email**
+- **Study Description**
+- **Contact Phone Number** — optional
+
+The study description should be brief and understandable to participants.
+
+The contact phone number may be useful when a participant or healthcare provider needs to contact the study team.
+
+### REDCap Field Mappings
+
+Select the project fields that contain or store:
+
+- participant name;
+- study start date;
+- study end date — optional;
+- Google Wallet link; and
+- Apple Wallet link.
+
+The Google and Apple Wallet links must be assigned to different destination fields.
+
+### Trigger Instrument
+
+Select the REDCap instrument that should issue the digital participant ID.
+
+DigitalTrialsID runs whenever the selected instrument is saved.
 
 ---
 
-### 4. Present the Wallet Options
+## 3. How Issuance Works
 
-After generation, the participant's REDCap record contains:
+When the configured trigger instrument is saved, DigitalTrialsID:
 
-```text
-[apple_wallet_link]
-[google_wallet_link]
-```
+1. Reads the participant name and study dates from the selected REDCap fields.
+2. Reads the study information from the project settings.
+3. Generates a signed Google Wallet link.
+4. Generates a short-lived request URL for the Apple Wallet service.
+5. Saves both URLs to the configured REDCap destination fields.
 
-The study controls where and how these links are presented to the participant.
+The participant should have a name and study start date before the trigger instrument is saved.
 
-One option is to place the Wallet buttons in the survey completion text.
+A study end date is not required.
+
+---
+
+## 4. Present the Wallet Options
+
+The study controls where and how the generated Wallet links are presented to participants.
+
+One option is to place Wallet buttons in the survey completion text.
 
 In REDCap:
 
-1. Open the survey settings for the instrument.
-2. Locate the **Survey Completion Text**.
+1. Open the survey settings for the trigger instrument.
+2. Locate **Survey Completion Text**.
 3. Switch the editor to **Source Code** view.
-4. Paste the following HTML.
+4. Paste the HTML below.
+5. Replace the example REDCap variable names with the actual destination fields selected in the module settings.
 
 ```html
-<h1 style="font-size: 16px; margin-bottom: 18px; text-align: center;">
-  <span style="font-size: 18pt;">
-    Please select the appropriate button below to add your
-    <strong>ResearchPass</strong> to Apple Wallet or Google Wallet.
-    <br><br>
-  </span>
-</h1>
+<div style="max-width: 720px; margin: 20px auto; text-align: center; font-family: Arial, Helvetica, sans-serif;">
+  <h2 style="font-size: 24px; line-height: 1.3; margin-bottom: 12px;">
+    Add Your ResearchPass
+  </h2>
 
-<p style="margin: 8px 0px; text-align: center;">
-  <a style="display: inline-block;" href="[apple_wallet_link]">
-    <img
-      style="height: 50px; width: auto; border: 0px;"
-      src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/add-to-apple-wallet-logo.png"
-      alt="Add to Apple Wallet">
-  </a>
-  <br><br><br>
-</p>
+  <p style="font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
+    Select the appropriate option below to add your digital study ID
+    to Apple Wallet or Google Wallet.
+  </p>
 
-<p style="margin: 8px 0px; text-align: center;">
-  <a style="display: inline-block;" href="[google_wallet_link]">
-    <img
-      style="height: 50px; width: auto; border: 0px;"
-      src="https://codelabs.developers.google.com/static/add-to-wallet-android/images/add-wallet-btn-large.png"
-      alt="Add to Google Wallet">
-  </a>
-</p>
+  <p style="margin: 12px 0 30px;">
+    <a
+      href="[apple_wallet_link]"
+      style="display: inline-block;"
+      aria-label="Add your ResearchPass to Apple Wallet">
+      <img
+        src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/iOS/add-to-apple-wallet-logo.png"
+        alt="Add to Apple Wallet"
+        style="height: 50px; width: auto; border: 0;">
+    </a>
+  </p>
+
+  <p style="margin: 12px 0;">
+    <a
+      href="[google_wallet_link]"
+      style="display: inline-block;"
+      aria-label="Add your ResearchPass to Google Wallet">
+      <img
+        src="https://codelabs.developers.google.com/static/add-to-wallet-android/images/add-wallet-btn-large.png"
+        alt="Add to Google Wallet"
+        style="height: 50px; width: auto; border: 0;">
+    </a>
+  </p>
+</div>
 ```
 
-The study may modify the text, spacing, or placement as needed.
-
-The important pieces are the REDCap piping references:
+For example, if the project uses different variable names, change:
 
 ```text
 [apple_wallet_link]
 [google_wallet_link]
 ```
 
-These are replaced with the participant's generated Wallet URLs when REDCap renders the page.
+to the actual REDCap fields selected in the module settings.
+
+REDCap replaces these piping references with the generated Wallet URLs when it renders the page.
 
 ---
 
-### 5. Test Before Use
+## 5. Test Before Participant Use
 
-Before issuing cards to participants:
+Test the complete workflow before issuing cards to participants.
 
-1. Create or use a test record.
+### Test With an End Date
+
+1. Create or select a test record.
 2. Enter a participant name.
 3. Enter a study start date.
 4. Enter a study end date.
 5. Save the configured trigger instrument.
-6. Confirm that `apple_wallet_link` is populated.
-7. Confirm that `google_wallet_link` is populated.
-8. Open the Google Wallet link and confirm that the card displays correctly.
-9. Open the Apple Wallet link and confirm that a valid pass is generated.
-10. Perform final Apple Wallet testing on an Apple device before participant use.
+6. Confirm that both configured Wallet-link fields are populated.
+7. Open the Google Wallet link.
+8. Open the Apple Wallet link.
+9. Confirm that both cards contain the expected information.
 
-If both Wallet options work as expected, the project is ready to issue digital participant IDs.
+### Test Without an End Date
 
----
+Repeat the test with the end date blank.
 
-## How It Works
+Confirm that:
 
-DigitalTrialsID sits between the REDCap project and the two mobile Wallet platforms.
+- both Wallet links are generated;
+- the Google card does not display an empty end-date line; and
+- the Apple pass opens successfully without an end date.
 
-```text
-+------------------------+
-|     REDCap Project     |
-|                        |
-| Participant + Study    |
-| Information            |
-+-----------+------------+
-            |
-            | Trigger instrument saved
-            v
-+------------------------+
-|    DigitalTrialsID     |
-+-----------+------------+
-            |
-      +-----+-----+
-      |           |
-      v           v
-+-----------+  +-------------+
-|  Google   |  |    Apple    |
-|  Wallet   |  |   Wallet    |
-+-----+-----+  +------+------+
-      |               |
-      +-------+-------+
-              |
-              v
-      +---------------+
-      |  Participant  |
-      | Mobile Wallet |
-      +---------------+
-```
-
-Google Wallet issuance is handled through Google's Wallet integration.
-
-Apple Wallet requires an additional pass-generation service because Apple `.pkpass` files must be cryptographically signed using Apple-issued credentials.
-
-The study does not need to manage this infrastructure. Once the institutional Wallet integrations have been configured by an administrator, the project primarily interacts with the DigitalTrialsID project settings.
+Final Apple Wallet testing should be performed on a compatible Apple device.
 
 ---
 
-## What Can Appear on the Digital ID?
+## Information Displayed on the Digital ID
 
 Depending on the project and system configuration, a digital ID may contain:
 
-- Participant name
-- Study title
-- Principal investigator
-- Study contact email
-- Study contact phone number
-- Study start date
-- Study end date
-- Study description
-- Institutional or study branding
+- participant name;
+- study title;
+- principal investigator;
+- study contact email;
+- study contact phone number;
+- study start date;
+- study end date, when available;
+- study description; and
+- institutional or study branding.
 
-The Apple and Google versions may display the information somewhat differently because each Wallet platform controls its own card layout.
+Apple Wallet and Google Wallet may display this information differently because each platform controls its own card layout.
 
 ---
 
 ## Google Wallet
 
-DigitalTrialsID generates a signed Google Save-to-Wallet object for the participant.
+DigitalTrialsID creates a signed Google Save-to-Wallet object using the institution’s configured Google service account.
 
-```text
-REDCap Record
-     |
-     v
-DigitalTrialsID
-     |
-     | Signed Wallet object
-     v
-Google Wallet
-     |
-     v
-Participant saves card
-```
+The generated URL is saved to the REDCap field selected as the **Google Wallet Link Field**.
 
-The generated link is stored in:
-
-```text
-google_wallet_link
-```
-
-When the participant follows the link, Google processes the signed Wallet object and allows the participant to save the card to Google Wallet.
+When the participant follows the URL, Google processes the signed object and allows the participant to add the card to Google Wallet.
 
 ---
 
@@ -267,55 +236,71 @@ When the participant follows the link, Google processes the signed Wallet object
 
 Apple Wallet passes must be cryptographically signed using Apple-issued credentials.
 
-DigitalTrialsID therefore generates a short-lived signed request to a separate Apple Wallet pass-generation service.
+DigitalTrialsID does not store the Apple signing certificate or private key. Instead, it generates a signed, short-lived request to a separately configured Apple Wallet pass-generation service.
 
-```text
-REDCap Record
-     |
-     v
-DigitalTrialsID
-     |
-     | Short-lived signed request
-     v
-Apple Pass Service
-     |
-     | Builds and signs pass
-     v
-.pkpass
-     |
-     v
-Apple Wallet
-```
+The Apple service:
 
-The generated link is stored in:
+1. validates the request;
+2. creates the participant’s pass;
+3. signs the pass using the institution’s Apple credentials; and
+4. returns the completed `.pkpass` file.
 
-```text
-apple_wallet_link
-```
-
-The Apple signing certificate and private key are **not stored in REDCap**.
-
-Because the Apple Wallet endpoint is configurable, institutions may use their preferred infrastructure to host the pass-generation service.
+The generated service URL is saved to the REDCap field selected as the **Apple Wallet Link Field**.
 
 ---
 
 # Administrator Setup
 
-> The sections below are intended primarily for REDCap system administrators responsible for installing DigitalTrialsID and configuring the institutional Wallet integrations.
+The following sections are intended for REDCap system administrators responsible for installing DigitalTrialsID and configuring the institutional Wallet integrations.
 
-A project user generally does not need to perform the steps below.
+Project users generally do not need to perform these steps.
+
+---
+
+## System Requirements
+
+### REDCap
+
+- REDCap 13.1.0 or later
+- REDCap External Modules enabled
+- External Module Framework version 12
+- Permission to install and configure External Modules
+
+### Server
+
+- PHP 8.0 or later
+- OpenSSL support
+- Ability to make outbound HTTPS requests to the configured Wallet services
+
+### Google Wallet
+
+The institution needs:
+
+- Google Wallet API access;
+- a Google Wallet Issuer account;
+- a Google service account authorized for the issuer; and
+- an existing Google Wallet Generic Pass class.
+
+### Apple Wallet
+
+The institution needs access to an HTTPS pass-generation service configured with:
+
+- an Apple Developer account;
+- an Apple Pass Type Identifier;
+- an Apple Pass Type signing certificate;
+- the corresponding private key;
+- the applicable Apple Worldwide Developer Relations certificate; and
+- the same shared token secret configured in DigitalTrialsID.
 
 ---
 
 ## Installation
 
-DigitalTrialsID is distributed with its required PHP dependencies already included in the `vendor` directory.
+DigitalTrialsID is distributed with its PHP dependencies in the `vendor` directory.
 
-A REDCap administrator does **not** need Composer installed on the REDCap server to use the module.
+A REDCap administrator does not need Composer installed on the REDCap server.
 
-Install DigitalTrialsID using the standard REDCap External Module installation process.
-
-The module package should include:
+The module package includes:
 
 ```text
 DigitalTrialsID.php
@@ -332,52 +317,16 @@ After installation:
 
 1. Enable DigitalTrialsID in the REDCap Control Center.
 2. Configure the system-level Wallet settings.
-3. Enable DigitalTrialsID in a test REDCap project.
-4. Configure the project settings.
-5. Test both Wallet integrations.
+3. Enable the module in a test project.
+4. Configure its project-level settings.
+5. Test Google and Apple Wallet issuance.
 6. Enable the module for additional projects as appropriate.
-
----
-
-## System Requirements
-
-### REDCap
-
-- REDCap 12.0.0 or later
-- REDCap External Modules enabled
-- Permission to install and configure External Modules
-
-### Server
-
-- PHP 8.0 or later
-- OpenSSL support
-
-### Google Wallet
-
-The institution needs:
-
-- Google Wallet API access
-- A Google Wallet Issuer account
-- A Google service account authorized for the issuer
-- A Google Wallet Generic Pass class
-
-### Apple Wallet
-
-The institution needs:
-
-- An Apple Developer account
-- An Apple Pass Type Identifier
-- An Apple Pass Type signing certificate and corresponding private key
-- The applicable Apple Worldwide Developer Relations certificate
-- An HTTPS service capable of generating and signing `.pkpass` files
-
-The Apple service does **not** have to use a particular hosting provider.
 
 ---
 
 ## System Configuration
 
-The following settings are configured at the REDCap system level.
+Only authorized REDCap administrators should manage the system-level settings.
 
 ### Environment
 
@@ -386,19 +335,21 @@ Select:
 - **Production**
 - **Test**
 
-The environment is incorporated into generated Wallet object identifiers to help keep test and production issuance separate.
+The selected environment is incorporated into generated Google Wallet object identifiers to help separate test and production issuance.
 
 ### Google Service Account Key
 
-Paste the JSON credentials for the Google service account authorized to issue Wallet objects.
+Paste the complete Google service account JSON authorized to issue Wallet objects.
 
-This credential should be treated as sensitive and accessible only to appropriate administrators.
+This credential is sensitive and should be accessible only to authorized REDCap administrators.
+
+Do not commit service account credentials to GitHub or another source-code repository.
 
 ### Google Issuer ID
 
-Enter the institution's Google Wallet Issuer ID.
+Enter the institution’s Google Wallet Issuer ID.
 
-Generic example:
+Example:
 
 ```text
 1234567890123456789
@@ -406,9 +357,9 @@ Generic example:
 
 ### Google Wallet Class ID Suffix
 
-Enter only the configured Generic Pass class suffix.
+Enter only the Generic Pass class suffix.
 
-Generic example:
+Example:
 
 ```text
 research_pass_class
@@ -418,17 +369,17 @@ DigitalTrialsID combines the issuer ID and class suffix automatically.
 
 ### Apple Token Secret
 
-Enter the shared secret used to sign Apple Wallet requests.
+Enter the shared secret used to sign requests sent to the Apple Wallet pass-generation service.
 
-The same secret must be configured by the Apple Wallet pass-generation service.
+The same secret must be configured in the Apple service.
 
-This is **not** an Apple certificate or Apple private key.
+This is not an Apple certificate or Apple private key.
 
 ### Apple Wallet Endpoint URL
 
 Enter the HTTPS endpoint for the Apple Wallet pass-generation service.
 
-Generic example:
+Example:
 
 ```text
 https://wallet-service.example.org/api/apple-pass
@@ -438,9 +389,9 @@ The service may be hosted on Azure or another institutionally approved platform.
 
 ### Logo URL
 
-Optional HTTPS URL for the logo displayed by Google Wallet.
+Optionally enter a direct HTTPS URL for the logo displayed by Google Wallet.
 
-Generic example:
+Example:
 
 ```text
 https://assets.example.org/research/logo.png
@@ -448,9 +399,9 @@ https://assets.example.org/research/logo.png
 
 ### Hero Image URL
 
-Optional HTTPS URL for the hero image displayed by Google Wallet.
+Optionally enter a direct HTTPS URL for the hero image displayed by Google Wallet.
 
-Generic example:
+Example:
 
 ```text
 https://assets.example.org/research/hero.png
@@ -458,9 +409,9 @@ https://assets.example.org/research/hero.png
 
 ### Card Background Color
 
-Optional hexadecimal background color for the Google Wallet card.
+Optionally enter a hexadecimal background color for the Google Wallet card.
 
-Generic example:
+Example:
 
 ```text
 #336699
@@ -468,297 +419,73 @@ Generic example:
 
 ---
 
-## Apple Wallet Pass-Generation Service
+## Apple Wallet Service Requirements
 
-Apple Wallet passes cannot simply be constructed as URLs. The completed `.pkpass` must be signed using Apple-issued credentials.
+The Apple Wallet endpoint is separate from this REDCap module.
 
-DigitalTrialsID keeps that signing process outside REDCap.
+The service must:
 
-The configured service must:
+1. receive the JWT generated by DigitalTrialsID;
+2. validate its signature;
+3. validate the `apple-wallet` audience;
+4. verify the token expiration;
+5. read the participant and study information;
+6. construct the Apple Wallet pass;
+7. sign the pass using the institution’s Apple credentials; and
+8. return the completed `.pkpass`.
 
-1. Receive the signed request generated by DigitalTrialsID.
-2. Validate the request.
-3. Verify that the token has not expired.
-4. Read the participant and study information.
-5. Construct the Apple Wallet pass.
-6. Sign the pass using the institution's Apple credentials.
-7. Return the completed `.pkpass`.
+The Apple token is signed using HS256 and expires after approximately one hour.
 
-This design keeps the Apple certificate and private key outside REDCap and allows institutions to choose their own hosting infrastructure.
+Institutions may host this service using Azure Functions or another approved serverless platform, container, or web server.
 
----
-
-## Azure Reference Implementation
-
-A working reference implementation of the Apple Wallet service was developed using **Microsoft Azure Functions**.
-
-**Azure is optional.** It is provided as an example of how the Apple Wallet service can be implemented.
-
-The reference implementation uses:
-
-- Microsoft Azure Functions
-- Flex Consumption hosting
-- Node.js 22 LTS
-- Azure Functions programming model v4
-- `jsonwebtoken`
-- `passkit-generator`
-
-### Reference Architecture
-
-```text
-+-------------+
-|   REDCap    |
-+------+------+
-       |
-       | Signed JWT
-       v
-+-------------------+
-| DigitalTrialsID   |
-+---------+---------+
-          |
-          | HTTPS
-          v
-+-------------------+
-|  Azure Function   |
-|                   |
-| Validate request  |
-| Build pass        |
-| Sign pass         |
-+---------+---------+
-          |
-          | .pkpass
-          v
-+-------------------+
-|   Apple Wallet    |
-+-------------------+
-```
-
-### Reference Folder Structure
-
-```text
-digitaltrials_azure/
-|
-+-- host.json
-+-- local.settings.json
-+-- package.json
-+-- package-lock.json
-+-- .funcignore
-+-- .gitignore
-|
-+-- src/
-    |
-    +-- functions/
-    |   +-- apple-pass.js
-    |
-    +-- assets/
-        +-- apple/
-            +-- icon.png
-            +-- icon@2x.png
-            +-- logo.png
-            +-- logo@2x.png
-```
-
-### apple-pass.js
-
-The HTTP-triggered Azure Function is responsible for:
-
-1. Receiving the JWT generated by DigitalTrialsID.
-2. Validating its signature, audience, and expiration.
-3. Reading the participant and study information.
-4. Loading the Apple signing credentials.
-5. Building the Apple Wallet pass.
-6. Signing the pass.
-7. Returning the completed `.pkpass`.
-
-### Apple Image Assets
-
-The reference implementation packages:
-
-```text
-icon.png
-icon@2x.png
-logo.png
-logo@2x.png
-```
-
-Institutions may replace these with their own appropriately sized Apple Wallet assets.
-
----
-
-## Azure Dependencies
-
-The reference implementation uses:
-
-```json
-{
-  "dependencies": {
-    "@azure/functions": "^4.0.0",
-    "jsonwebtoken": "^9.0.3",
-    "passkit-generator": "^3.5.7"
-  }
-}
-```
-
-Install the Node dependencies on the development workstation with:
-
-```bash
-npm install
-```
-
----
-
-## Azure Application Settings
-
-The reference implementation expects:
-
-```text
-APPLE_TOKEN_SECRET
-APPLE_WWDR_BASE64
-APPLE_SIGNER_CERT_BASE64
-APPLE_SIGNERKEY_BASE64
-APPLE_PASS_TYPE_IDENTIFIER
-APPLE_TEAM_IDENTIFIER
-```
-
-### APPLE_TOKEN_SECRET
-
-Shared secret used to validate requests from DigitalTrialsID.
-
-It must match the **Apple Token Secret** configured in REDCap.
-
-### APPLE_WWDR_BASE64
-
-Base64-encoded Apple Worldwide Developer Relations certificate.
-
-### APPLE_SIGNER_CERT_BASE64
-
-Base64-encoded Apple Pass Type signing certificate.
-
-### APPLE_SIGNERKEY_BASE64
-
-Base64-encoded private key corresponding to the Pass Type certificate.
-
-### APPLE_PASS_TYPE_IDENTIFIER
-
-Apple Pass Type Identifier associated with the signing certificate.
-
-Generic example:
-
-```text
-pass.org.example.research
-```
-
-### APPLE_TEAM_IDENTIFIER
-
-Apple Developer Team Identifier associated with the Pass Type ID.
-
-Certificate values, private keys, and token secrets should **never be committed to a public source repository**.
-
----
-
-## Basic Azure Deployment
-
-The reference implementation can be hosted using an Azure Function App configured with:
-
-- Flex Consumption hosting
-- Node.js runtime
-- Node.js 22 LTS
-
-Azure Functions Core Tools are used from the development workstation.
-
-Initialize a Node.js v4 Functions project:
-
-```bash
-func init . --worker-runtime node --model v4
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Run locally:
-
-```bash
-func start
-```
-
-Deploy to an existing Azure Function App:
-
-```bash
-func azure functionapp publish YOUR-FUNCTION-APP-NAME
-```
-
-After deployment:
-
-1. Obtain the HTTPS endpoint for the Apple pass function.
-2. Add the required Azure application settings.
-3. Enter the endpoint in DigitalTrialsID as the **Apple Wallet Endpoint URL**.
-4. Configure the same Apple Token Secret in REDCap and Azure.
-5. Test the workflow using a REDCap test project.
-
----
-
-## Using a Platform Other Than Azure
-
-Azure is only a reference implementation.
-
-DigitalTrialsID itself is hosting-platform independent.
-
-Another serverless platform, containerized application, web server, or institutionally approved service may be used if it can:
-
-- expose an HTTPS endpoint;
-- receive the signed request from DigitalTrialsID;
-- validate the JWT signature;
-- verify token expiration;
-- securely protect Apple signing credentials;
-- generate a valid Apple Wallet pass;
-- cryptographically sign the pass; and
-- return the resulting `.pkpass`.
-
-The configurable **Apple Wallet Endpoint URL** allows DigitalTrialsID to use the institution's chosen implementation without modifying the REDCap module.
+The service’s signing certificates, private keys, and token secrets must never be committed to a public source repository.
 
 ---
 
 ## Data Flow and Privacy
 
-DigitalTrialsID integrates REDCap with external Wallet services.
+DigitalTrialsID transmits information from REDCap to external Wallet services.
 
-Administrators and study teams should understand this data flow before enabling the module for participant use.
+Administrators and study teams should evaluate the information displayed on each card before enabling participant use.
 
 ### Google Wallet
 
-Participant and study information is incorporated into the signed Google Wallet object.
+Participant and study information is incorporated into a signed Google Wallet object.
 
-Depending on project configuration, this may include:
+This may include:
 
-- Participant name
-- Study title
-- Principal investigator
-- Study contact information
-- Study dates
-- Study description
+- participant name;
+- study title;
+- principal investigator;
+- study contact information;
+- study dates; and
+- study description.
 
-When the participant uses the generated link, the information required to create the card is provided to Google Wallet.
+When the participant follows the generated URL, the information needed to create the card is provided to Google Wallet.
 
 ### Apple Wallet
 
-DigitalTrialsID places the information required to generate the Apple pass into a signed, short-lived JWT.
+Participant and study information is incorporated into a signed, short-lived JWT and sent to the configured Apple Wallet service.
 
-Depending on configuration, this may include:
+The token may include:
 
-- Participant name
-- Study title
-- Principal investigator
-- Study contact information
-- Study dates
-- Study description
-- REDCap identifiers required by the pass-generation workflow
+- participant name;
+- study title;
+- principal investigator;
+- study contact information;
+- study dates;
+- study description; and
+- REDCap project, event, and record identifiers used by the pass-generation workflow.
 
-When the participant requests the pass, this information is transmitted to the configured Apple Wallet pass-generation service.
+Institutions are responsible for determining whether their configuration is appropriate under applicable:
 
-Institutions are responsible for determining whether their implementation is appropriate under applicable institutional policies, study requirements, participant disclosures, and privacy requirements.
+- institutional privacy and security policies;
+- IRB requirements;
+- participant consent or disclosure requirements;
+- data-use requirements; and
+- applicable laws and regulations.
+
+Only information appropriate for display on a participant’s digital study ID should be configured for Wallet issuance.
 
 ---
 
@@ -766,52 +493,44 @@ Institutions are responsible for determining whether their implementation is app
 
 ### Google Credentials
 
-Google service account credentials are configured at the system level and should be accessible only to authorized REDCap administrators.
+Google service account credentials are stored in the system-level module settings.
+
+Access to these settings should be restricted to authorized REDCap administrators.
 
 ### Apple Credentials
 
 Apple signing certificates and private keys remain outside REDCap.
 
-DigitalTrialsID stores only the shared secret required to sign requests to the Apple Wallet service.
-
-### Short-Lived Tokens
-
-Apple Wallet generation requests use signed JWTs with expiration timestamps.
-
-### HTTPS
-
-The Apple Wallet pass-generation endpoint should use HTTPS.
+DigitalTrialsID stores only the shared token secret required to sign requests to the Apple Wallet service.
 
 ### Generated Wallet Links
 
-Generated Wallet links should be treated as sensitive record data and should not be exposed unnecessarily.
+Generated Wallet links should be treated as sensitive REDCap record data and should not be exposed unnecessarily.
 
 ### Logging
 
-Operational logging is intentionally limited.
+DigitalTrialsID does not create its own log file.
 
-The REDCap module avoids writing participant names, study dates, signed JWTs, or complete Wallet URLs to its debug log.
+Meaningful configuration or generation failures may be written to the REDCap External Module log. Participant names, credentials, signed tokens, and complete Wallet URLs are not intentionally written to that log.
 
 ---
 
 ## Administrator Testing Checklist
 
-Before making DigitalTrialsID available for participant use, test the complete workflow.
-
-Confirm that:
+Before making DigitalTrialsID available for participant use, confirm that:
 
 - the module enables without errors;
-- the project settings can be configured;
-- the configured trigger instrument generates Wallet links;
-- `google_wallet_link` is populated;
-- `apple_wallet_link` is populated;
+- the system settings can be saved;
+- the project settings and field mappings can be configured;
+- the configured trigger instrument generates both Wallet links;
+- the links are saved to the selected destination fields;
 - the Google Wallet card opens correctly;
 - the Apple service returns a valid `.pkpass`;
 - the Apple pass opens correctly on an Apple device;
-- missing optional contact information does not prevent generation;
-- missing optional images do not prevent generation;
+- a card can be generated without an end date;
+- optional phone and image settings do not prevent generation;
 - generated links are written to the correct REDCap record; and
-- failure of an external Wallet service does not prevent the REDCap record from saving.
+- a Wallet-generation failure does not prevent the original REDCap record from saving.
 
 Testing should be repeated after significant changes to DigitalTrialsID, REDCap, PHP, Wallet APIs, or the Apple pass-generation service.
 
@@ -819,67 +538,86 @@ Testing should be repeated after significant changes to DigitalTrialsID, REDCap,
 
 ## Troubleshooting
 
-If Wallet links are not generated, check these items first:
+If Wallet links are not generated, check:
 
 1. Is the correct trigger instrument configured?
-2. Are `participant_name`, `start_date`, and `end_date` populated?
-3. Do `google_wallet_link` and `apple_wallet_link` exist in the project?
-4. Is the Google service account configuration valid?
-5. Is the Google issuer and class configuration valid?
-6. Is the Apple Wallet endpoint reachable?
-7. Does the Apple Token Secret match between REDCap and the pass-generation service?
-8. Does the Apple service have valid signing credentials?
-9. Does the module log indicate which Wallet generation step failed?
+2. Are the participant-name and start-date field mappings configured?
+3. Are the Google and Apple destination-field mappings configured?
+4. Are the two Wallet links mapped to different destination fields?
+5. Does the record contain a participant name and start date?
+6. Is the Google service account JSON valid?
+7. Are the Google issuer ID and class suffix correct?
+8. Is the Apple Wallet endpoint reachable over HTTPS?
+9. Does the Apple token secret match the secret used by the Apple service?
+10. Does the Apple service have valid signing credentials?
+11. Does the REDCap External Module log contain a configuration or generation error?
+
+An end date is optional and should not prevent Wallet generation.
+
+---
+
+## Module Files
+
+```text
+DigitalTrialsID.php
+pass_utils.php
+config.json
+composer.json
+composer.lock
+README.md
+LICENSE.txt
+vendor/
+```
+
+### `DigitalTrialsID.php`
+
+Contains the REDCap save-record hook, reads the configured settings and field mappings, generates unique issuance identifiers, and saves Wallet links to the selected REDCap fields.
+
+### `pass_utils.php`
+
+Creates the signed Google Save-to-Wallet JWT and the signed Apple service request token.
+
+### `config.json`
+
+Defines the module metadata, compatibility requirements, system settings, project settings, and REDCap field mappings.
+
+### `vendor/`
+
+Contains the PHP dependency required to create signed JWTs.
 
 ---
 
 ## Development
 
-Normal REDCap installation does **not** require Composer because `vendor/` is included with the module.
+Normal REDCap installation does not require Composer because the `vendor` directory is included with the module.
 
-Composer is only required when a developer intentionally modifies or rebuilds the PHP dependency set.
+Composer is required only when a developer intentionally modifies or rebuilds the PHP dependency set.
 
-The primary PHP dependency is:
+The primary dependency is:
 
 ```text
 firebase/php-jwt
 ```
 
-From a development workstation:
+Install the locked dependencies with:
 
 ```bash
-composer install
+composer install --no-dev
 ```
 
-To intentionally update dependency versions:
+Intentionally update dependencies with:
 
 ```bash
-composer update
+composer update --no-dev
 ```
 
 After rebuilding dependencies:
 
-1. Test the updated module.
-2. Confirm both Wallet integrations still work.
-3. Include the resulting `vendor/` directory in the version distributed to REDCap.
-
----
-
-## Institutional Review
-
-DigitalTrialsID provides the technical mechanism for issuing digital research participant ID cards.
-
-Use of the module does not by itself determine whether particular information is appropriate for a specific research study or mobile Wallet.
-
-Institutions and study teams are responsible for evaluating their implementation under applicable:
-
-- Institutional privacy and security policies
-- IRB requirements
-- Participant consent or disclosure requirements
-- Data-use requirements
-- Applicable laws and regulations
-
-Only information appropriate for display on a participant's digital study ID should be configured for Wallet issuance.
+1. Run `composer validate --strict`.
+2. Run `composer audit`.
+3. Test both Wallet integrations.
+4. Commit the updated `composer.lock` and `vendor` contents.
+5. Include the complete `vendor` directory in the distributed release.
 
 ---
 
