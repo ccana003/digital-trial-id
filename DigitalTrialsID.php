@@ -6,17 +6,8 @@ use REDCap;
 
 require_once __DIR__ . '/pass_utils.php';
 
-// Prove the file loads
-dtid_log('BOOT: DigitalTrialsID.php loaded');
-
 class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 {
-    public function __construct()
-    {
-        parent::__construct();
-        dtid_log('CTOR: DigitalTrialsID instantiated');
-    }
-
     private function getInstallUuid(int $project_id): string
     {
         $uuid = $this->getProjectSetting('gw_install_uuid');
@@ -32,8 +23,6 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             );
 
             $this->setProjectSetting('gw_install_uuid', $uuid);
-
-            dtid_log("INIT: generated gw_install_uuid={$uuid}");
         }
 
         return $uuid;
@@ -49,25 +38,15 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         $response_id = null,
         $repeat_instance = 1
     ) {
-        dtid_log(
-            "HOOK: redcap_save_record | instrument={$instrument}"
-        );
-
         $triggerInstrument = trim(
             (string)($this->getProjectSetting('trigger_instrument') ?? '')
         );
 
         if ($triggerInstrument === '') {
-            dtid_log(
-                'SKIP: trigger_instrument project setting not configured'
-            );
             return;
         }
 
         if ($instrument !== $triggerInstrument) {
-            dtid_log(
-                "SKIP: instrument mismatch ({$instrument} !== {$triggerInstrument})"
-            );
             return;
         }
 
@@ -112,16 +91,18 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             $googleWalletLinkField === '' ||
             $appleWalletLinkField === ''
         ) {
-            dtid_log(
-                'ERROR: One or more required project field mappings are missing'
+            $this->log(
+                'DigitalTrialsID: Wallet generation was skipped because one or more required project field mappings are missing.'
             );
+
             return;
         }
 
         if ($googleWalletLinkField === $appleWalletLinkField) {
-            dtid_log(
-                'ERROR: Google Wallet and Apple Wallet cannot use the same destination field'
+            $this->log(
+                'DigitalTrialsID: Google Wallet and Apple Wallet cannot use the same destination field.'
             );
+
             return;
         }
 
@@ -165,15 +146,6 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
                 (string)($fields[$endDateField] ?? '')
             );
         }
-
-        dtid_log(
-            'DATA: participant=' .
-            ($participant !== '' ? '[SET]' : '[EMPTY]') .
-            ' startDate=' .
-            ($startDate !== '' ? '[SET]' : '[EMPTY]') .
-            ' endDate=' .
-            ($endDate !== '' ? '[SET]' : '[EMPTY]')
-        );
 
         // ----------------------------------------------------
         // Project-level study information
@@ -238,9 +210,10 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         );
 
         if (!$googleJson || !$issuerId || !$classSuffix) {
-            dtid_log(
-                'ERROR: Missing Google Wallet system settings'
+            $this->log(
+                'DigitalTrialsID: Wallet generation was skipped because required Google Wallet system settings are missing.'
             );
+
             return;
         }
 
@@ -251,15 +224,12 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             empty($credentials['client_email']) ||
             empty($credentials['private_key'])
         ) {
-            dtid_log(
-                'ERROR: Invalid Google service account JSON'
+            $this->log(
+                'DigitalTrialsID: Wallet generation was skipped because the Google service account JSON is invalid.'
             );
+
             return;
         }
-
-        dtid_log(
-            "CONFIG: issuerId={$issuerId} classId={$classId}"
-        );
 
         $env = (string)(
             $this->getSystemSetting('environment') ?? 'prod'
@@ -293,10 +263,6 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             'u' . $issueId
         ]);
 
-        dtid_log(
-            'GOOGLE: object key generated successfully'
-        );
-
         // ----------------------------------------------------
         // Generate Google Wallet link
         // ----------------------------------------------------
@@ -319,15 +285,12 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         );
 
         if (!is_string($walletLink)) {
-            dtid_log(
-                'ERROR: Wallet link is not a string'
+            $this->log(
+                'DigitalTrialsID: Google Wallet link generation failed.'
             );
+
             return;
         }
-
-        dtid_log(
-            'GOOGLE: wallet link generated successfully'
-        );
 
         // ----------------------------------------------------
         // Apple Wallet — dynamic JWT token and URL
@@ -350,16 +313,16 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             }
 
             $appleClaims = [
-                'record_id'          => (string)$record,
-                'project_id'         => (int)$project_id,
-                'event_id'           => (int)$event_id,
-                'participant_name'   => (string)$participant,
-                'study_title'        => (string)$studyTitle,
-                'pi_name'            => (string)$piName,
-                'contact_email'      => (string)$contactEmail,
-                'study_description'  => (string)$studyDescription,
-                'start_date'         => (string)$startDate,
-                'end_date'           => (string)$endDate,
+                'record_id'           => (string)$record,
+                'project_id'          => (int)$project_id,
+                'event_id'            => (int)$event_id,
+                'participant_name'    => (string)$participant,
+                'study_title'         => (string)$studyTitle,
+                'pi_name'             => (string)$piName,
+                'contact_email'       => (string)$contactEmail,
+                'study_description'   => (string)$studyDescription,
+                'start_date'          => (string)$startDate,
+                'end_date'            => (string)$endDate,
                 'study_contact_phone' => (string)$contactPhone
             ];
 
@@ -385,25 +348,16 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
                 rtrim($appleEndpoint, '/') .
                 '?token=' .
                 urlencode($appleJwt);
-
-            dtid_log(
-                'APPLE: wallet URL generated successfully'
-            );
         } catch (\Throwable $e) {
             // Apple failure must not interrupt the REDCap save.
-            dtid_log(
-                'APPLE ERROR (ignored for save): ' .
-                $e->getMessage()
+            $this->log(
+                'DigitalTrialsID: Apple Wallet link generation failed. Google Wallet processing was allowed to continue.'
             );
         }
 
         // ----------------------------------------------------
         // Save links to the configured REDCap fields
         // ----------------------------------------------------
-        dtid_log(
-            'STEP: about to saveData()'
-        );
-
         $payload = [
             $googleWalletLinkField => $walletLink,
             $appleWalletLinkField  => $appleWalletUrl
@@ -419,17 +373,10 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             ]
         );
 
-        dtid_log(
-            'SAVE: item_count=' .
-            ($save['item_count'] ?? 'null') .
-            ' error_count=' .
-            count($save['errors'] ?? []) .
-            ' warning_count=' .
-            count($save['warnings'] ?? [])
-        );
-
-        dtid_log(
-            'STEP: end of hook'
-        );
+        if (!empty($save['errors'])) {
+            $this->log(
+                'DigitalTrialsID: REDCap could not save one or more generated wallet links.'
+            );
+        }
     }
 }
