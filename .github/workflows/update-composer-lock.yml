@@ -45,6 +45,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          git checkout -b update-composer-lock
           git add composer.lock
           git commit -m "Update Composer lock file"
-          git push
+          git push origin update-composer-lock
