@@ -12,15 +12,18 @@ Once DigitalTrialsID has been installed and enabled for your REDCap project, mos
 
 ### 1. Add the Required Fields
 
-Your REDCap project needs the following fields:
+Your REDCap project needs text or date fields containing the following values. Field names are configurable; the names below are examples only:
 
-- `participant_name` — participant name displayed on the digital ID
-- `start_date` — participant's study start date
-- `end_date` — participant's study end date
-- `google_wallet_link` — stores the generated Google Wallet link
-- `apple_wallet_link` — stores the generated Apple Wallet link
+- `participant_name` — participant name displayed on the digital ID (**required**)
+- `start_date` — participant's study start date (**required**)
+- `end_date` — participant's study end date (**optional**)
+- `study_title` — study title (**required**)
+- `pi_name` — principal investigator name (**required**)
+- `study_contact_email` — study contact email (**required**)
+- `google_wallet_link` — destination for the generated Google Wallet link (**required**)
+- `apple_wallet_link` — destination for the generated Apple Wallet link (**required**)
 
-DigitalTrialsID automatically writes the generated Wallet links to the last two fields.
+Configure each actual field under the module's project settings. DigitalTrialsID reads record values from the selected fields and writes generated Wallet links to the two selected destination fields. It never displays the configured variable names as pass content.
 
 The Wallet link fields should not be manually edited by participants.
 
@@ -38,15 +41,23 @@ Open the External Module settings for your REDCap project and configure the stud
 
 #### Study Title
 
-Select the REDCap field containing the study title.
+Enter the REDCap variable name containing the study title. This setting is a text input, not a field dropdown.
 
 #### Principal Investigator Name
 
-Select the REDCap field containing the principal investigator's name.
+Enter the REDCap variable name containing the principal investigator's name. This setting is a text input, not a field dropdown.
 
 #### Study Contact Email
 
-Select the REDCap field containing the study contact email address.
+Enter the REDCap variable name containing the study contact email address. This setting is a text input, not a field dropdown.
+
+#### Participant and Date Fields
+
+Select the fields containing the participant name and study start date. Both values are required before links can be issued. The study end-date field and its value are optional; if omitted, Google Wallet does not show an empty **End Date** line, and Apple receives an empty end-date claim safely.
+
+#### Wallet Link Fields
+
+Select the text fields in which the Google Wallet and Apple Wallet links should be stored. Keep these fields on the same non-repeating event as the trigger instrument.
 
 #### Study Description
 
@@ -89,7 +100,11 @@ Configured instrument is saved
      Saved to REDCap record
 ```
 
-The participant must have a name, study start date, and study end date before the digital ID can be generated.
+The participant must have a name and study start date before the digital ID can be generated. The end date is optional.
+
+Repeating instruments are not supported. If the selected trigger instrument is configured as repeating, issuance is skipped for every instance and an operational message is written to the External Module log. In longitudinal projects, the module reads and writes values in the event that fired the hook; configure the mapped fields and trigger instrument in that same event.
+
+A valid existing link is not reissued on later saves. To intentionally regenerate a pass after changing mapped data, clear the applicable saved link and save the trigger instrument again.
 
 ---
 
@@ -162,15 +177,21 @@ Before issuing cards to participants:
 1. Create or use a test record.
 2. Enter a participant name.
 3. Enter a study start date.
-4. Enter a study end date.
-5. Save the configured trigger instrument.
-6. Confirm that `apple_wallet_link` is populated.
-7. Confirm that `google_wallet_link` is populated.
-8. Open the Google Wallet link and confirm that the card displays correctly.
+4. Optionally enter a study end date.
+5. Populate the selected study title, PI name, and contact email fields.
+6. Save the configured trigger instrument.
+7. Confirm that the configured Apple and Google link fields are populated.
+8. Open the Google Wallet link and confirm that the card displays correctly and omits the end-date line when no end date was entered.
 9. Open the Apple Wallet link and confirm that a valid pass is generated.
-10. Perform final Apple Wallet testing on an Apple device before participant use.
+10. Test each integration with the other integration deliberately misconfigured and confirm the successful link is still saved.
+11. Save unrelated data and confirm existing valid passes are not reissued.
+12. Test the configured event in a longitudinal project.
+13. Confirm all instances of a repeating trigger instrument are skipped.
+14. Perform final Apple Wallet testing on an Apple device before participant use.
 
-If both Wallet options work as expected, the project is ready to issue digital participant IDs.
+Google and Apple generation are independent. If one integration is unavailable or misconfigured, a valid link from the other integration is still saved. A failed service never replaces an existing valid link with an empty value and never interrupts the REDCap record save.
+
+If the configured Wallet options work as expected, the project is ready to issue digital participant IDs.
 
 ---
 
@@ -377,7 +398,7 @@ The Apple service does **not** have to use a particular hosting provider.
 
 ## System Configuration
 
-The following settings are configured at the REDCap system level.
+The following settings are configured at the REDCap system level. Credential settings are marked for super-user-only access where the installed External Module Framework supports that restriction.
 
 ### Environment
 
@@ -788,9 +809,9 @@ Generated Wallet links should be treated as sensitive record data and should not
 
 ### Logging
 
-Operational logging is intentionally limited.
+Operational logging is intentionally limited and uses REDCap's External Module log. The module does not write a `debug.log` file in its directory.
 
-The REDCap module avoids writing participant names, study dates, signed JWTs, or complete Wallet URLs to its debug log.
+Logs report configuration, generation, and save failures without participant names, credentials, private keys, JWTs, complete Wallet URLs, or other sensitive values.
 
 ---
 
@@ -801,16 +822,21 @@ Before making DigitalTrialsID available for participant use, test the complete w
 Confirm that:
 
 - the module enables without errors;
-- the project settings can be configured;
-- the configured trigger instrument generates Wallet links;
+- all eight field mappings and the trigger instrument can be configured;
+- the configured non-repeating trigger instrument generates Wallet links in classic and longitudinal projects;
 - `google_wallet_link` is populated;
 - `apple_wallet_link` is populated;
 - the Google Wallet card opens correctly;
 - the Apple service returns a valid `.pkpass`;
 - the Apple pass opens correctly on an Apple device;
+- a missing end date does not prevent generation or add a blank Google end-date line;
 - missing optional contact information does not prevent generation;
 - missing optional images do not prevent generation;
-- generated links are written to the correct REDCap record; and
+- generated links are written to the correct REDCap record and event;
+- all instances of a repeating trigger instrument are skipped;
+- saving unrelated data does not reissue existing valid links;
+- each Wallet integration succeeds when the other is unavailable;
+- a failed integration does not erase its existing valid link; and
 - failure of an external Wallet service does not prevent the REDCap record from saving.
 
 Testing should be repeated after significant changes to DigitalTrialsID, REDCap, PHP, Wallet APIs, or the Apple pass-generation service.
@@ -821,9 +847,9 @@ Testing should be repeated after significant changes to DigitalTrialsID, REDCap,
 
 If Wallet links are not generated, check these items first:
 
-1. Is the correct trigger instrument configured?
-2. Are `participant_name`, `start_date`, and `end_date` populated?
-3. Do `google_wallet_link` and `apple_wallet_link` exist in the project?
+1. Is the correct, non-repeating trigger instrument configured?
+2. Are the participant, start-date, study-title, PI-name, and contact-email mappings configured and populated in the current event?
+3. Are the configured Google and Apple destination fields present in the current event?
 4. Is the Google service account configuration valid?
 5. Is the Google issuer and class configuration valid?
 6. Is the Apple Wallet endpoint reachable?

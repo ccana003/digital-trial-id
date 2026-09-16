@@ -3,15 +3,13 @@
   "namespace": "UniversityofMiami\\DigitalTrialsID",
   "description": "Generate digital research participant ID cards for Apple Wallet and Google Wallet.",
   "version": "0.0.1",
+  "framework-version": 12,
   "authors": [
     {
       "name": "Carlos A. Canales",
       "email": "ccanales2@miami.edu",
       "institution": "University of Miami"
     }
-  ],
-  "permissions": [
-    "redcap_save_record"
   ],
   "enable-every-page-hooks-on-system-pages": false,
   "links": {
@@ -23,23 +21,58 @@
     {
       "key": "field_study_title",
       "name": "Study Title:",
-      "type": "field-name",
-      "field-type": "text",
-      "required": true
+      "type": "text",
+      "required": true,
+      "description": "Enter the REDCap variable name containing the study title."
     },
     {
       "key": "field_pi_name",
       "name": "Principal Investigator Name:",
-      "type": "field-name",
-      "field-type": "text",
-      "required": true
+      "type": "text",
+      "required": true,
+      "description": "Enter the REDCap variable name containing the principal investigator's name."
     },
     {
       "key": "field_contact_email",
       "name": "Study Contact Email:",
-      "type": "field-name",
-      "field-type": "email",
-      "required": true
+      "type": "text",
+      "required": true,
+      "description": "Enter the REDCap variable name containing the study contact email address."
+    },
+    {
+      "key": "field_participant_name",
+      "name": "Participant Name Field:",
+      "type": "field-list",
+      "required": true,
+      "description": "Select the REDCap field containing the participant name displayed on the Wallet pass."
+    },
+    {
+      "key": "field_start_date",
+      "name": "Study Start Date Field:",
+      "type": "field-list",
+      "required": true,
+      "description": "Select the REDCap field containing the participant's study start date."
+    },
+    {
+      "key": "field_end_date",
+      "name": "Study End Date Field:",
+      "type": "field-list",
+      "required": false,
+      "description": "Optional. Select the REDCap field containing the participant's study end date."
+    },
+    {
+      "key": "field_google_wallet_link",
+      "name": "Google Wallet Link Field:",
+      "type": "field-list",
+      "required": true,
+      "description": "Select the REDCap text field where the generated Google Wallet URL will be saved."
+    },
+    {
+      "key": "field_apple_wallet_link",
+      "name": "Apple Wallet Link Field:",
+      "type": "field-list",
+      "required": true,
+      "description": "Select the REDCap text field where the generated Apple Wallet URL will be saved."
     },
     {
       "key": "field_study_description",
@@ -87,6 +120,7 @@
       "type": "textarea",
       "required": false,
       "external": true,
+      "super-users-only": true,
       "description": "Paste the full contents of your Google Wallet service account JSON here."
     },
     {
@@ -106,8 +140,9 @@
     {
       "key": "apple_token_secret",
       "name": "Apple Wallet Token Secret",
-      "type": "text",
+      "type": "password",
       "required": true,
+      "super-users-only": true,
       "description": "Shared secret used to sign Apple Wallet JWT tokens. Must match the secret configured by the Apple Wallet pass generation service."
     },
     {
