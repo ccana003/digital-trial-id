@@ -63,9 +63,9 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
                 return;
             }
 
-            $isRepeating = method_exists(REDCap::class, 'isRepeatingFormOrEvent')
-                && REDCap::isRepeatingFormOrEvent($event_id, $instrument);
-            if ($isRepeating || (int) $repeat_instance > 1) {
+            // The form-list setting excludes repeating instruments. This runtime check
+            // also protects projects whose configuration predates that restriction.
+            if ((int) $repeat_instance > 1) {
                 $this->log('Wallet issuance skipped because repeating instruments are not supported.');
                 return;
             }
@@ -101,7 +101,15 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
                 'events' => [$event_id],
                 'fields' => $requestedFields,
             ]);
-            $eventData = $data[$record][$event_id] ?? [];
+            $recordData = $data[$record] ?? [];
+            if (!is_array($recordData)) {
+                $recordData = [];
+            }
+
+            // REDCap returns different array shapes for classic and longitudinal
+            // projects. Longitudinal data is nested by event ID; classic data is not.
+            $isLongitudinal = isset($recordData[$event_id]) && is_array($recordData[$event_id]);
+            $eventData = $isLongitudinal ? $recordData[$event_id] : $recordData;
 
             $values = [];
             foreach ($fieldNames as $name => $fieldName) {
@@ -158,11 +166,10 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 
             self::$recordsBeingUpdated[$guardKey] = true;
             try {
-                $result = REDCap::saveData($project_id, 'array', [
-                    $record => [
-                        $event_id => $linksToSave,
-                    ],
-                ]);
+                $savePayload = $isLongitudinal
+                    ? [$record => [$event_id => $linksToSave]]
+                    : [$record => $linksToSave];
+                $result = REDCap::saveData($project_id, 'array', $savePayload);
             } finally {
                 unset(self::$recordsBeingUpdated[$guardKey]);
             }

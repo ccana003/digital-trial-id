@@ -102,7 +102,7 @@ Configured instrument is saved
 
 The participant must have a name and study start date before the digital ID can be generated. The end date is optional.
 
-Repeating instruments are not supported. If the selected trigger instrument is configured as repeating, issuance is skipped for every instance and an operational message is written to the External Module log. In longitudinal projects, the module reads and writes values in the event that fired the hook; configure the mapped fields and trigger instrument in that same event.
+Repeating instruments are not supported. The trigger-instrument selector excludes repeating instruments, and saves for repeat instances after instance 1 are rejected as an additional safeguard. In longitudinal projects, the module reads and writes values in the event that fired the hook; configure the mapped fields and trigger instrument in that same event.
 
 A valid existing link is not reissued on later saves. To intentionally regenerate a pass after changing mapped data, clear the applicable saved link and save the trigger instrument again.
 
@@ -186,7 +186,7 @@ Before issuing cards to participants:
 10. Test each integration with the other integration deliberately misconfigured and confirm the successful link is still saved.
 11. Save unrelated data and confirm existing valid passes are not reissued.
 12. Test the configured event in a longitudinal project.
-13. Confirm all instances of a repeating trigger instrument are skipped.
+13. Confirm repeating instruments cannot be selected and repeat instances after instance 1 are skipped for an older retained configuration.
 14. Perform final Apple Wallet testing on an Apple device before participant use.
 
 Google and Apple generation are independent. If one integration is unavailable or misconfigured, a valid link from the other integration is still saved. A failed service never replaces an existing valid link with an empty value and never interrupts the REDCap record save.
@@ -833,7 +833,7 @@ Confirm that:
 - missing optional contact information does not prevent generation;
 - missing optional images do not prevent generation;
 - generated links are written to the correct REDCap record and event;
-- all instances of a repeating trigger instrument are skipped;
+- repeating instruments cannot be selected and repeat instances after instance 1 are skipped for an older retained configuration;
 - saving unrelated data does not reissue existing valid links;
 - each Wallet integration succeeds when the other is unavailable;
 - a failed integration does not erase its existing valid link; and
