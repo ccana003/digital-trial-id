@@ -5,17 +5,8 @@ use REDCap;
 
 require_once __DIR__ . '/pass_utils.php';
 
-// Prove the file loads
-dtid_log('BOOT: DigitalTrialsID.php loaded');
-
 class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 {
-    public function __construct()
-    {
-        parent::__construct();
-        dtid_log('CTOR: DigitalTrialsID instantiated');
-    }
-	
 	private function getInstallUuid(int $project_id): string
 	{
 		$uuid = $this->getProjectSetting('gw_install_uuid');
@@ -28,7 +19,7 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 			$uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 			$this->setProjectSetting('gw_install_uuid', $uuid);
 
-			dtid_log("INIT: generated gw_install_uuid={$uuid}");
+			dtid_log('INIT: generated gw_install_uuid successfully', $project_id);
 		}
 
 		return $uuid;
@@ -44,17 +35,13 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         $response_id = null,
         $repeat_instance = 1
     ) {
-        dtid_log("HOOK: redcap_save_record | instrument={$instrument}");
-
         $triggerInstrument = (string)($this->getProjectSetting('trigger_instrument') ?? '');
 
 		if ($triggerInstrument === '') {
-			dtid_log('SKIP: trigger_instrument project setting not configured');
 			return;
 		}
 
 		if ($instrument !== $triggerInstrument) {
-			dtid_log("SKIP: instrument mismatch ({$instrument} !== {$triggerInstrument})");
 			return;
 		}
 
@@ -76,12 +63,6 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         $startDate   = trim((string)($fields[$startDateField] ?? ''));
         $endDate     = trim((string)($fields[$endDateField] ?? ''));
 
-        dtid_log(
-			'DATA: participant=' . ($participant !== '' ? '[SET]' : '[EMPTY]') .
-			' startDate=' . ($startDate !== '' ? '[SET]' : '[EMPTY]') .
-			' endDate=' . ($endDate !== '' ? '[SET]' : '[EMPTY]')
-		);
-
         // Project-level settings (these are strings in your current setup)
         $studyTitle       = (string)($this->getProjectSetting('field_study_title') ?? '');
         $piName           = (string)($this->getProjectSetting('field_pi_name') ?? '');
@@ -99,18 +80,16 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         $backgroundColor   = $this->getSystemSetting('background_color');
 
         if (!$googleJson || !$issuerId || !$classId) {
-            dtid_log('ERROR: Missing Google Wallet system settings');
+            dtid_log('ERROR: Missing Google Wallet system settings', $project_id);
             return;
         }
 
         $credentials = json_decode($googleJson, true);
         if (!$credentials || empty($credentials['client_email']) || empty($credentials['private_key'])) {
-            dtid_log('ERROR: Invalid Google service account JSON');
+            dtid_log('ERROR: Invalid Google service account JSON', $project_id);
             return;
         }
 
-        dtid_log("CONFIG: issuerId={$issuerId} classId={$classId}");
-		
 		$env = (string)($this->getSystemSetting('environment') ?? 'prod');
 		$installUuid = $this->getInstallUuid($project_id);
 		$installShort = strtoupper(substr(preg_replace('/[^a-f0-9]/i', '', $installUuid), 0, 6));
@@ -128,7 +107,7 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 			'u' . $issueId
 		]);
 
-		dtid_log('GOOGLE: object key generated successfully');
+		dtid_log('GOOGLE: object key generated successfully', $project_id);
 
 		
         // Generate Google Wallet link
@@ -147,15 +126,16 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             $studyDescription,
             $logoUrl,
             $heroUrl,
-            $backgroundColor
+            $backgroundColor,
+            $project_id
         );
 
         if (!is_string($walletLink)) {
-            dtid_log('ERROR: Wallet link is not a string');
+            dtid_log('ERROR: Wallet link is not a string', $project_id);
             return;
         }
 
-        dtid_log('GOOGLE: wallet link generated successfully');
+        dtid_log('GOOGLE: wallet link generated successfully', $project_id);
 
         // ----------------------------------------------------
         // Apple Wallet — dynamic JWT token + URL
@@ -199,15 +179,13 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 				. '?token=' . urlencode($appleJwt);
 
 
-            dtid_log('APPLE: wallet URL generated successfully');
+            dtid_log('APPLE: wallet URL generated successfully', $project_id);
         } catch (\Throwable $e) {
             // FAIL-OPEN: Apple can never block saving
-            dtid_log('APPLE ERROR (ignored for save): ' . $e->getMessage());
+            dtid_log('APPLE ERROR (ignored for save): ' . $e->getMessage(), $project_id);
         }
 
         // Save both links
-        dtid_log('STEP: about to saveData()');
-
         $payload = [
             'google_wallet_link' => $walletLink,
             'apple_wallet_link'  => $appleWalletUrl,
@@ -222,10 +200,9 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
         dtid_log(
 			'SAVE: item_count=' . ($save['item_count'] ?? 'null') .
 			' error_count=' . count($save['errors'] ?? []) .
-			' warning_count=' . count($save['warnings'] ?? [])
+			' warning_count=' . count($save['warnings'] ?? []),
+			$project_id
 		);
-
-        dtid_log('STEP: end of hook');
     }
 	
 	

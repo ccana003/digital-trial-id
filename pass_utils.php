@@ -13,11 +13,15 @@ use Firebase\JWT\JWT;
  * BASIC LOGGING
  * ============================================================ */
 if (!function_exists('dtid_log')) {
-    function dtid_log(string $msg): void
+    function dtid_log(string $msg, $projectId = null): void
     {
+        $projectPrefix = $projectId !== null && $projectId !== ''
+            ? 'PROJECT ' . (string)$projectId . ' | '
+            : '';
+
         @file_put_contents(
             __DIR__ . DIRECTORY_SEPARATOR . 'debug.log',
-            '[' . date('Y-m-d H:i:s') . "] {$msg}\n",
+            '[' . date('Y-m-d H:i:s') . "] {$projectPrefix}{$msg}\n",
             FILE_APPEND | LOCK_EX
         );
     }
@@ -96,7 +100,8 @@ function generate_wallet_link(
     $study_description = null,
     $logo_url = null,
     $hero_url = null,
-    $background_color = null
+    $background_color = null,
+    $project_id = null
 ) {
     try {
         ensure_vendor_autoload();
@@ -106,12 +111,12 @@ function generate_wallet_link(
             empty($credentials['client_email']) ||
             empty($credentials['private_key'])
         ) {
-            dtid_log('GOOGLE ERROR: service account credentials unavailable');
+            dtid_log('GOOGLE ERROR: service account credentials unavailable', $project_id);
             return false;
         }
 
         if (!$issuerId || !$classId) {
-            dtid_log('GOOGLE ERROR: issuer or class configuration unavailable');
+            dtid_log('GOOGLE ERROR: issuer or class configuration unavailable', $project_id);
             return false;
         }
 
@@ -263,7 +268,7 @@ function generate_wallet_link(
         return "https://pay.google.com/gp/v/save/{$jwt}";
 
     } catch (\Throwable $e) {
-        dtid_log('GOOGLE ERROR: wallet link generation failed');
+        dtid_log('GOOGLE ERROR: wallet link generation failed', $project_id);
         return false;
     }
 }
