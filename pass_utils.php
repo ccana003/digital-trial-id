@@ -1,5 +1,8 @@
 <?php
 
+namespace UniversityofMiami\DigitalTrialsID;
+
+
 /**
  * PASS UTILS
  * - Google Wallet: object-only Save to Wallet JWT generation
@@ -28,7 +31,7 @@ function ensure_vendor_autoload(): void
         . 'autoload.php';
 
     if (!file_exists($autoload)) {
-        throw new Exception(
+        throw new \Exception(
             'Missing vendor/autoload.php in module folder.'
         );
     }
@@ -37,7 +40,7 @@ function ensure_vendor_autoload(): void
     $loaded = true;
 
     if (!class_exists('\\Firebase\\JWT\\JWT')) {
-        throw new Exception(
+        throw new \Exception(
             'JWT library not available after autoload.'
         );
     }
