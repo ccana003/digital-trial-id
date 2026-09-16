@@ -3,15 +3,13 @@
   "namespace": "UniversityofMiami\\DigitalTrialsID",
   "description": "Generate digital research participant ID cards for Apple Wallet and Google Wallet.",
   "version": "0.0.1",
+  "framework-version": 12,
   "authors": [
     {
       "name": "Carlos A. Canales",
       "email": "ccanales2@miami.edu",
       "institution": "University of Miami"
     }
-  ],
-  "permissions": [
-    "redcap_save_record"
   ],
   "enable-every-page-hooks-on-system-pages": false,
   "links": {
@@ -22,45 +20,91 @@
   "project-settings": [
     {
       "key": "field_study_title",
-      "name": "Study Title:",
-      "type": "field-name",
-      "field-type": "text",
-      "required": true
+      "name": "Study Title",
+      "type": "text",
+      "required": true,
+      "description": "Enter the study title exactly as it should appear on the digital participant ID."
     },
     {
       "key": "field_pi_name",
-      "name": "Principal Investigator Name:",
-      "type": "field-name",
-      "field-type": "text",
-      "required": true
+      "name": "Principal Investigator Name",
+      "type": "text",
+      "required": true,
+      "description": "Enter the principal investigator's name exactly as it should appear on the digital participant ID."
     },
     {
       "key": "field_contact_email",
-      "name": "Study Contact Email:",
-      "type": "field-name",
-      "field-type": "email",
-      "required": true
+      "name": "Study Contact Email",
+      "type": "email",
+      "required": true,
+      "description": "Enter the study contact email address displayed on the digital participant ID."
     },
     {
       "key": "field_study_description",
       "name": "Study Description",
       "type": "textarea",
       "required": true,
-      "description": "Enter a lay-friendly description of the study purpose/objective."
+      "description": "Enter a brief, participant-friendly description of the study purpose or objective."
     },
     {
       "key": "study_contact_phone",
-      "name": "Contact Phone Number:",
+      "name": "Study Contact Phone Number",
       "type": "text",
       "required": false,
-      "description": "This contact number is provided for situations in which a participant's healthcare provider needs to contact the study team."
+      "description": "Optional. Enter a telephone number participants or healthcare providers may use to contact the study team."
+    },
+    {
+      "key": "field_participant_name",
+      "name": "Participant Name Field",
+      "type": "field-list",
+      "field-type": "text",
+      "required": true,
+      "repeatable": false,
+      "description": "Select the REDCap text field containing the participant name displayed on the digital ID."
+    },
+    {
+      "key": "field_study_start_date",
+      "name": "Study Start Date Field",
+      "type": "field-list",
+      "validation": "date",
+      "required": true,
+      "repeatable": false,
+      "description": "Select the REDCap date field containing the participant's study start date."
+    },
+    {
+      "key": "field_study_end_date",
+      "name": "Study End Date Field",
+      "type": "field-list",
+      "validation": "date",
+      "required": false,
+      "repeatable": false,
+      "description": "Optional. Select the REDCap date field containing the participant's study end date. Leave this unselected if the end date may be unknown."
+    },
+    {
+      "key": "field_google_wallet_link",
+      "name": "Google Wallet Link Field",
+      "type": "field-list",
+      "field-type": "text",
+      "required": true,
+      "repeatable": false,
+      "description": "Select the REDCap text field where the generated Google Wallet link should be saved."
+    },
+    {
+      "key": "field_apple_wallet_link",
+      "name": "Apple Wallet Link Field",
+      "type": "field-list",
+      "field-type": "text",
+      "required": true,
+      "repeatable": false,
+      "description": "Select the REDCap text field where the generated Apple Wallet link should be saved."
     },
     {
       "key": "trigger_instrument",
-      "name": "Instrument that issues Digital Study IDs",
-      "required": true,
+      "name": "Instrument That Issues Digital Study IDs",
       "type": "form-list",
-      "repeatable": false
+      "required": true,
+      "repeatable": false,
+      "description": "Select the REDCap instrument that should generate the Apple Wallet and Google Wallet links when saved."
     }
   ],
   "system-settings": [
@@ -79,77 +123,81 @@
           "name": "Test"
         }
       ],
-      "description": "Identifies the environment used when generating wallet object IDs."
+      "description": "Identifies the environment used when generating Google Wallet object identifiers."
     },
     {
       "key": "google_service_account_json",
       "name": "Google Service Account Key (JSON)",
       "type": "textarea",
-      "required": false,
-      "external": true,
-      "description": "Paste the full contents of your Google Wallet service account JSON here."
+      "required": true,
+      "super-users-only": true,
+      "description": "Paste the complete JSON credentials for the Google service account authorized to issue Wallet objects. Treat this value as a sensitive credential."
     },
     {
       "key": "google_issuer_id",
       "name": "Google Issuer ID",
       "type": "text",
-      "required": false,
-      "description": "Your Google Wallet Issuer ID (for example, 3388000000022955593)."
+      "required": true,
+      "super-users-only": true,
+      "description": "Enter the institution's Google Wallet Issuer ID."
     },
     {
       "key": "google_class_id",
       "name": "Google Wallet Class ID Suffix",
       "type": "text",
-      "required": false,
-      "description": "Enter only the class suffix, for example digitaltrials_class. The issuer ID is added automatically."
+      "required": true,
+      "super-users-only": true,
+      "description": "Enter only the Generic Pass class suffix, such as digitaltrials_class. The issuer ID is added automatically."
     },
     {
       "key": "apple_token_secret",
       "name": "Apple Wallet Token Secret",
-      "type": "text",
+      "type": "password",
       "required": true,
-      "description": "Shared secret used to sign Apple Wallet JWT tokens. Must match the secret configured by the Apple Wallet pass generation service."
+      "super-users-only": true,
+      "description": "Enter the shared secret used to sign Apple Wallet JWT tokens. It must match the secret configured in the Apple Wallet pass-generation service."
     },
     {
       "key": "apple_wallet_endpoint",
       "name": "Apple Wallet Endpoint URL",
       "type": "text",
       "required": true,
-      "description": "Base URL for the Apple Wallet pass generation service."
+      "super-users-only": true,
+      "description": "Enter the HTTPS URL for the Apple Wallet pass-generation service."
     },
     {
       "key": "logo_url",
-      "name": "Logo URL",
+      "name": "Google Wallet Logo URL",
       "type": "text",
       "required": false,
       "repeatable": false,
       "placeholder": "https://example.com/logo.png",
-      "description": "Optional direct HTTPS URL to a logo image accessible by Google Wallet."
+      "description": "Optional. Enter a direct HTTPS URL to a logo image accessible to Google Wallet."
     },
     {
       "key": "hero_url",
-      "name": "Hero Image URL",
+      "name": "Google Wallet Hero Image URL",
       "type": "text",
       "required": false,
       "repeatable": false,
       "placeholder": "https://example.com/hero.png",
-      "description": "Optional direct HTTPS URL to a hero image accessible by Google Wallet."
+      "description": "Optional. Enter a direct HTTPS URL to a hero image accessible to Google Wallet."
     },
     {
       "key": "background_color",
-      "name": "Card Background Color",
+      "name": "Google Wallet Card Background Color",
       "type": "text",
       "required": false,
       "repeatable": false,
       "placeholder": "#ffb994",
-      "description": "Enter a HEX color code for the background (for example, #004080)."
+      "description": "Optional. Enter a hexadecimal color value, such as #004080."
     }
   ],
   "crons": [],
   "compatibility": {
-    "php-version-min": "8.0",
+    "php-version-min": "8.0.0",
     "php-version-max": "",
-    "redcap-version-min": "12.0.0",
+    "redcap-version-min": "13.1.0",
     "redcap-version-max": ""
   }
 }
