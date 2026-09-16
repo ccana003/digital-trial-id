@@ -1,13 +1,13 @@
-name: Update Composer Lock
+name: Composer Validation and Security Audit
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  update-lock:
+  composer-check:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,32 +20,19 @@ jobs:
           php-version: '8.4'
           tools: composer:v2
 
-      - name: Show Composer configuration
+      - name: Show environment
         run: |
           php -v
           composer --version
-          composer validate --no-check-lock || true
 
-      - name: Regenerate composer.lock
-        run: composer update --lock --no-install --no-audit --no-interaction
-
-      - name: Validate Composer files
+      - name: Validate composer.json and composer.lock
         run: composer validate
 
-      - name: Show resulting platform override
-        run: grep -A 3 '"platform-overrides"' composer.lock || true
+      - name: Install locked dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress
 
-      - name: Commit updated lock file
-        run: |
-          if git diff --quiet composer.lock; then
-            echo "composer.lock did not require changes."
-            exit 0
-          fi
+      - name: Check PHP platform requirements
+        run: composer check-platform-reqs --no-dev
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git checkout -b update-composer-lock
-          git add composer.lock
-          git commit -m "Update Composer lock file"
-          git push origin update-composer-lock
+      - name: Run Composer security audit
+        run: composer audit --locked --no-dev
