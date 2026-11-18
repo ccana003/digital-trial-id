@@ -367,7 +367,7 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             if ($resolver !== '' && $secret !== '') {
                 try {
                     $shortUrl = dtid_register_google_shortlink($resolver, $secret, $walletLink);
-                } catch (\\Throwable $e) {
+                } catch (\Throwable $e) {
                     $this->log('DigitalTrialsID: Google Wallet short-link registration failed; existing wallet links remain available.');
                 }
             }
