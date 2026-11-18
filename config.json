@@ -90,6 +90,15 @@
       "description": "Select the REDCap text field where the generated Google Wallet link should be saved."
     },
     {
+      "key": "field_google_wallet_short",
+      "name": "Google Wallet Short Link Field (Optional)",
+      "type": "field-list",
+      "field-type": "text",
+      "required": false,
+      "repeatable": false,
+      "description": "Optional destination for a Google Wallet short URL. Requires a separately configured HTTPS short-link registration service. Use this field as the source for the QR Code module."
+    },
+    {
       "key": "field_apple_wallet_link",
       "name": "Apple Wallet Link Field",
       "type": "field-list",
@@ -191,6 +200,22 @@
       "repeatable": false,
       "placeholder": "#ffb994",
       "description": "Optional. Enter a hexadecimal color value, such as #004080."
+    },
+    {
+      "key": "google_shortlink_register_endpoint",
+      "name": "Google Short-Link Registration HTTPS Endpoint",
+      "type": "text",
+      "required": false,
+      "super-users-only": true,
+      "description": "Optional trusted HTTPS endpoint that accepts POST JSON with wallet_url and returns JSON with short_url. Must be an approved service; not the public redirect URL."
+    },
+    {
+      "key": "google_shortlink_api_key",
+      "name": "Google Short-Link Registration API Key",
+      "type": "password",
+      "required": false,
+      "super-users-only": true,
+      "description": "Shared secret sent as Authorization: Bearer to the short-link registration endpoint. Never expose to participants."
     }
   ],
   "crons": [],
