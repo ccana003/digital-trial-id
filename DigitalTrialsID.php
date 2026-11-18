@@ -5,6 +5,7 @@ namespace UniversityofMiami\DigitalTrialsID;
 use REDCap;
 
 require_once __DIR__ . '/pass_utils.php';
+require_once __DIR__ . '/google_shortlink.php';
 
 class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
 {
@@ -355,6 +356,23 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             );
         }
 
+        // Optional Google Wallet QR short-link registration.
+        // A separate, institution-approved resolver is required. A failure
+        // must never affect the original Google or Apple Wallet links.
+        $shortField = trim((string)($this->getProjectSetting('field_google_wallet_short') ?? ''));
+        $shortUrl = '';
+        if ($shortField !== '' && $shortField !== $googleWalletLinkField && $shortField !== $appleWalletLinkField) {
+            $resolver = trim((string)($this->getSystemSetting('google_shortlink_register_endpoint') ?? ''));
+            $secret = (string)($this->getSystemSetting('google_shortlink_api_key') ?? '');
+            if ($resolver !== '' && $secret !== '') {
+                try {
+                    $shortUrl = dtid_register_google_shortlink($resolver, $secret, $walletLink);
+                } catch (\\Throwable $e) {
+                    $this->log('DigitalTrialsID: Google Wallet short-link registration failed; existing wallet links remain available.');
+                }
+            }
+        }
+
         // ----------------------------------------------------
         // Save links to the configured REDCap fields
         // ----------------------------------------------------
@@ -362,6 +380,10 @@ class DigitalTrialsID extends \ExternalModules\AbstractExternalModule
             $googleWalletLinkField => $walletLink,
             $appleWalletLinkField  => $appleWalletUrl
         ];
+
+        if ($shortField !== '' && $shortField !== $googleWalletLinkField && $shortField !== $appleWalletLinkField) {
+            $payload[$shortField] = $shortUrl;
+        }
 
         $save = REDCap::saveData(
             $project_id,
