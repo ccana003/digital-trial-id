@@ -1,5 +1,5 @@
 <?php
-namespace UniversityofMiami\\DigitalTrialsID;
+namespace UniversityofMiami\DigitalTrialsID;
 
 /**
  * Register a signed Google Wallet URL with an institution-controlled resolver.
@@ -11,13 +11,13 @@ function dtid_register_google_shortlink(string $endpoint, string $apiKey, string
     $parts = parse_url($endpoint);
     if (!$parts || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])
         || isset($parts['user']) || isset($parts['pass']) || isset($parts['fragment'])) {
-        throw new \\RuntimeException('Invalid registration endpoint.');
+        throw new \RuntimeException('Invalid registration endpoint.');
     }
-    if (!preg_match('~^https://pay\\.google\\.com/gp/v/save/[A-Za-z0-9_.-]+$~', $walletUrl)) {
-        throw new \\RuntimeException('Invalid Google Wallet destination.');
+    if (!preg_match('~^https://pay\.google\.com/gp/v/save/[A-Za-z0-9_.-]+$~', $walletUrl)) {
+        throw new \RuntimeException('Invalid Google Wallet destination.');
     }
     if (!function_exists('curl_init')) {
-        throw new \\RuntimeException('PHP cURL is required.');
+        throw new \RuntimeException('PHP cURL is required.');
     }
     $body = json_encode(['wallet_url' => $walletUrl], JSON_THROW_ON_ERROR);
     $curl = curl_init($endpoint);
@@ -41,7 +41,7 @@ function dtid_register_google_shortlink(string $endpoint, string $apiKey, string
         $response = curl_exec($curl);
         $status = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
         if ($response === false || $status !== 201 || strlen($response) > 4096) {
-            throw new \\RuntimeException('Registration request failed.');
+            throw new \RuntimeException('Registration request failed.');
         }
     } finally {
         curl_close($curl);
@@ -49,12 +49,12 @@ function dtid_register_google_shortlink(string $endpoint, string $apiKey, string
     $data = json_decode($response, true, 8, JSON_THROW_ON_ERROR);
     $short = $data['short_url'] ?? null;
     if (!is_string($short) || strlen($short) > 512) {
-        throw new \\RuntimeException('Invalid short-link response.');
+        throw new \RuntimeException('Invalid short-link response.');
     }
     $shortParts = parse_url($short);
     if (!$shortParts || ($shortParts['scheme'] ?? '') !== 'https' || empty($shortParts['host'])
         || isset($shortParts['user']) || isset($shortParts['pass']) || isset($shortParts['fragment'])) {
-        throw new \\RuntimeException('Invalid short-link URL.');
+        throw new \RuntimeException('Invalid short-link URL.');
     }
     return $short;
 }
